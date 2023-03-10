@@ -133,7 +133,8 @@ func Parse(path string, cut_path int) {
 
 	tmp_arr, err := f.Readdir(-1) // <- Read all files
 	if err != nil {
-		log.Fatal(err)
+		fmt.Println("wwtf")
+		//log.Fatal(err)
 	}
 	dir, _ := f.Stat()
 	_, err2 := os.Readlink(path)
