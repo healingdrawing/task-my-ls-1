@@ -129,11 +129,12 @@ func Parse(path string, cut_path int) {
 		fmt.Printf("ls: cannot access '%s': No such file or directory\n", path[cut_path+1:])
 		return
 	}
-	defer f.Close()
+	//defer f.Close()
 
-	tmp_arr, err := f.Readdir(-1) // <- Read all files
+	tmp_arr, err := f.Readdir(0) // <- Read all files
 	if err != nil {
-		fmt.Println("wwtf")
+		//fmt.Println("no such file")
+		//return
 		//log.Fatal(err)
 	}
 	dir, _ := f.Stat()
