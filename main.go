@@ -40,32 +40,48 @@ var (
 /*___________________________________________________________*/
 //Use this link to know better - https://golang.org/pkg/os/#FileInfo
 //To see more information about table on ls -l use this link - https://stackoverflow.com/questions/43181806/result-of-linux-ls-lisa-command
-
 func printLsL(tmp os.FileInfo, Name, path string) {
-	mode := tmp.Mode().String()  // <- ex: drxrxx
-	mode = strings.ToLower(mode) // <- fix small bug: on links, because on link file first rune is L, not l
+	mode := tmp.Mode().String()  // Get file mode as string (ex: "drxrxx")
+	mode = strings.ToLower(mode) // Convert to lowercase, since link file mode starts with "L" instead of "l"
+
+	// Fix some cases where mode string doesn't follow standard format
 	if mode[1] == 'c' {
 		mode = mode[1:]
 	}
 	if mode[1] == 't' {
 		mode = mode[:1] + mode[2:]
 	}
+	// Add a "+" to the mode string if it matches specific conditions
 	if mode == "crw-rw-rw-" || mode == "crw-rw-r--" {
 		mode += "+"
 	}
 
-	stat, _ := tmp.Sys().(*syscall.Stat_t) // <- how to parse interface - https://stackoverflow.com/questions/28339240/get-file-inode-in-go
-	// fmt.Println(stat.Rdev / 256)
-	// fmt.Println(stat.Rdev % 256)
-	user, group := data.GetUserName(stat.Uid, stat.Gid)
-	size := tmp.Size()                                 //<- File size in byte
-	date := tmp.ModTime()                              // <- Last modifed time
-	month := date.Month().String()[:3]                 // <- Month
-	day := date.Day()                                  // <- Day
-	h, m, _ := date.Clock()                            // <- hours minutes
-	s := fmt.Sprintf(format, data.GetColor(tmp), Name) // <- our output
+	// Get file stats and convert to syscall.Stat_t type
+	stat, _ := tmp.Sys().(*syscall.Stat_t)
 
-	if mode[0] == 'l' { // origin file of link file
+	// Get the owner and group names for the file using the stat info
+	user, group := data.GetUserName(stat.Uid, stat.Gid)
+
+	// Get file size in bytes
+	size := tmp.Size()
+
+	// Get last modified time for the file
+	date := tmp.ModTime()
+
+	// Extract the month abbreviation (e.g. "Jan") from the date
+	month := date.Month().String()[:3]
+
+	// Get the day of the month from the date
+	day := date.Day()
+
+	// Get the hour and minute from the date
+	h, m, _ := date.Clock()
+
+	// Format the file name with appropriate color and spacing
+	s := fmt.Sprintf(format, data.GetColor(tmp), Name)
+
+	// If the file is a link, get the target file info and add "-> target" to the output
+	if mode[0] == 'l' { // symbolic link
 		origin, err := os.Readlink(path + "/" + tmp.Name())
 		path_or := origin
 		if origin[0] != '/' {
@@ -73,19 +89,22 @@ func printLsL(tmp os.FileInfo, Name, path string) {
 		}
 		f2, err2 := os.Open(path_or)
 
-		if err != nil || err2 != nil { // <- if link file is broken
+		// If the link is broken, print the target file name only
+		if err != nil || err2 != nil {
 			arr := strings.Split(origin, "/")
 			s = fmt.Sprintf(format, 9, tmp.Name()) + " -> " + fmt.Sprintf(format, 9, arr[len(arr)-1])
-		} else {
+		} else { // Otherwise, print the target file info as well
 			stat, _ := f2.Stat()
 			s += " -> " + fmt.Sprintf(format, data.GetColor(stat), origin)
 		}
 		defer f2.Close()
 	}
 
+	// Set a reference time for comparison to determine whether to print full date or just year
 	now := time.Now()
 	now = now.AddDate(0, -6, 0)
-	/* Adding spaces for output format using max length of each row */
+
+	// Add spaces to user, group, and mode strings to match max length
 	for i := len(user); i < mx_user; i++ {
 		user += " "
 	}
@@ -96,21 +115,28 @@ func printLsL(tmp os.FileInfo, Name, path string) {
 		mode += " "
 	}
 	/* Pinting our date with special formal like in ls */
-	if now.Before(date) {
-		if mode[0] != 'c' {
-			printFormat := "%s %" + strconv.Itoa(mx_blocks) + "d %s %s %" + strconv.Itoa(mx_bytes) + "d %s %2d %02d:%02d %s\n"
+	if now.Before(date) { // check if the current date is before the modification date of the file
+		if mode[0] != 'c' { // check if the file is not a character device
+			// define print format string for regular file
+			printFormat := "%s %" + strconv.Itoa(mx_blocks) + "d %s %s %" + strconv.Itoa(mx_bytes) + "d %s %2d:%02d %s\n"
+			// print the file information using the defined format string
 			fmt.Printf(printFormat, mode, stat.Nlink, user, group, size, month, day, h, m, s)
-		} else {
+		} else { // the file is a character device
+			// define print format string for character device
 			printFormat := "%s %" + strconv.Itoa(mx_blocks) + "d %s %s %" + strconv.Itoa(mx_minor) + "d, %" + strconv.Itoa(mx_major) + "d %s %2d  %d %s\n"
+			// print the file information using the defined format string
 			fmt.Printf(printFormat, mode, stat.Nlink, user, group, data.CountDivision(uint64(stat.Rdev)), data.CountMod(uint64(stat.Rdev)), month, day, date.Year(), s)
 		}
-	} else {
-		if mode[0] != 'c' {
+	} else { // the current date is on or after the modification date of the file
+		if mode[0] != 'c' { // check if the file is not a character device
+			// define print format string for regular file
 			printFormat := "%s %" + strconv.Itoa(mx_blocks) + "d %s %s %" + strconv.Itoa(mx_bytes) + "d %s %2d  %d %s\n"
+			// print the file information using the defined format string
 			fmt.Printf(printFormat, mode, stat.Nlink, user, group, size, month, day, date.Year(), s)
-		} else {
+		} else { // the file is a character device
+			// define print format string for character device
 			printFormat := "%s %" + strconv.Itoa(mx_blocks) + "d %s %s %" + strconv.Itoa(mx_minor) + "d, %" + strconv.Itoa(mx_major) + "d %s %2d  %d %s\n"
-
+			// print the file information using the defined format string
 			fmt.Printf(printFormat, mode, stat.Nlink, user, group, data.CountDivision(uint64(stat.Rdev)), data.CountMod(uint64(stat.Rdev)), month, day, date.Year(), s)
 		}
 	}
