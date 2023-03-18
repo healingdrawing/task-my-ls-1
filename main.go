@@ -202,11 +202,11 @@ func printNames(files []fs.FileInfo) {
 		if inc_a {
 			fmt.Print(file[i].Name, "\t")
 			// Otherwise, check if the file's first character is a dot (indicating it's a hidden file), if not print the file name
+		} else if file[i].Name[0] != '.' {
+			fmt.Print(file[i].Name, "\t")
 
 		} else if file[i].Name[0] != '-' { // it theree is no flag after the -
 			break
-		} else if file[i].Name[0] != '.' {
-			fmt.Print(file[i].Name, "\t")
 		}
 	}
 	// Reset the global file slice to an empty slice
