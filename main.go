@@ -95,9 +95,10 @@ func args() []string {
 		// Check if argument is a valid file or directory
 		target, err := os.Lstat(thisArg)
 		if err != nil {
+			fmt.Print()
 			// If not a valid file or directory, append to inCorrect slice
-			inCorrect = append(inCorrect, "my-ls-1: "+thisArg+": No such file or directory")
-			continue // Skip to the next argument
+			//inCorrect = append(inCorrect, "my-ls-1: "+thisArg+": No such file or directory")
+			//continue // Skip to the next argument
 		}
 		// If the target exists and is a directory, append to folders slice
 		if target != nil && target.IsDir() {
@@ -157,6 +158,7 @@ func flags(flag string) bool {
 			res = false // If flag is not recognized, set result to false
 		}
 	}
+
 	return res // Return result of flag validation
 }
 
@@ -199,13 +201,11 @@ func printNames(files []fs.FileInfo) {
 		// Check if the -a flag was passed, if so print all files including hidden files (those starting with a dot)
 		if inc_a {
 			fmt.Print(file[i].Name, "\t")
-
 			// Otherwise, check if the file's first character is a dot (indicating it's a hidden file), if not print the file name
 
-		} else if file[i].Name[0] != '-' { // it there is no flag after the - give error message.
+		} else if file[i].Name[0] != '-' { // it theree is no flag after the -
 			break
 		} else if file[i].Name[0] != '.' {
-
 			fmt.Print(file[i].Name, "\t")
 		}
 	}
