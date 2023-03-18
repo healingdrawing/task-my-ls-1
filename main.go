@@ -53,8 +53,8 @@ func main() {
 	if len(os.Args) < 2 {
 		os.Args = append(os.Args, ".")
 	}
-	NotOk(os.Args[1])           // Validate the command line argument, exit program if invalid
-	lsFiles := argInterpreter() // Parse command line arguments and return a list of target files/folders
+	NotOk(os.Args[1]) // Validate the command line argument, exit program if invalid
+	lsFiles := args() // Parse command line arguments and return a list of target files/folders
 	for _, thisTarget := range lsFiles {
 		_, err := ioutil.ReadDir(thisTarget) // Check if the target is a directory and can be read
 		if err != nil {                      // If the target is not a directory or cannot be read, list all files and folders recursively
@@ -72,7 +72,7 @@ func main() {
 	}
 }
 
-func argInterpreter() []string {
+func args() []string {
 	// If no arguments are given, return current directory
 	if len(os.Args) < 2 {
 		return []string{"./"}
@@ -87,7 +87,7 @@ func argInterpreter() []string {
 	for _, thisArg := range os.Args[1:] {
 		// If still looking for flags, validate the argument is a flag
 		if searchForFlag {
-			if validateFlag(thisArg) {
+			if flags(thisArg) {
 				continue // Skip to the next argument
 			}
 			searchForFlag = false // Stop searching for flags
@@ -130,7 +130,7 @@ func argInterpreter() []string {
 	}
 	return retVal
 }
-func validateFlag(flag string) bool {
+func flags(flag string) bool {
 	res := true
 
 	if len(flag) < 2 { // Flag can not be less than two char
@@ -157,7 +157,6 @@ func validateFlag(flag string) bool {
 			res = false // If flag is not recognized, set result to false
 		}
 	}
-
 	return res // Return result of flag validation
 }
 
@@ -168,7 +167,7 @@ func filesInFolder(name, address string) {
 	}
 
 	if !inc_l { // If flag '-l' is not set, print only file names
-		printNamesOnly(files)
+		printNames(files)
 		for _, file := range files { // Loop through files in directory
 			if file.IsDir() { // If file is a directory
 				if inc_R { // If flag '-R' is set
@@ -186,7 +185,7 @@ func filesInFolder(name, address string) {
 	}
 }
 
-func printNamesOnly(files []fs.FileInfo) {
+func printNames(files []fs.FileInfo) {
 	for i := 0; i < len(files); i++ {
 		// Create a new File struct for each file in the files slice
 		newFile := &File{
@@ -200,8 +199,13 @@ func printNamesOnly(files []fs.FileInfo) {
 		// Check if the -a flag was passed, if so print all files including hidden files (those starting with a dot)
 		if inc_a {
 			fmt.Print(file[i].Name, "\t")
+
 			// Otherwise, check if the file's first character is a dot (indicating it's a hidden file), if not print the file name
+
+		} else if file[i].Name[0] != '-' { // it there is no flag after the - give error message.
+			break
 		} else if file[i].Name[0] != '.' {
+
 			fmt.Print(file[i].Name, "\t")
 		}
 	}
@@ -358,7 +362,7 @@ func sortRev(sorted []fs.FileInfo) []fs.FileInfo {
 	return sorted // Return the reversed sorted list of file info
 }
 
-func IsSymlink(path string) bool {
+func symlink(path string) bool {
 	fi, err := os.Lstat(path) // Get file info for the path
 	if err != nil {
 		return false // If there was an error getting file info, return false
@@ -393,7 +397,7 @@ func listAll(folder string) {
 	files, err := ioutil.ReadDir(folder)
 
 	// If there is an error or folder is a symlink, print out an error message and return
-	if err != nil || IsSymlink(folder) {
+	if err != nil || symlink(folder) {
 		if _, err2 := os.Stat(folder); errors.Is(err2, os.ErrNotExist) {
 			fmt.Println(strings.Replace(err.Error(), "open", "my-ls-1:", 1))
 			return
@@ -456,8 +460,8 @@ func listAll(folder string) {
 		if inc_a {
 			printDot(folder, inc_r, extraInfo) // Print dot files first
 		}
-		printNamesOnly(sorted) // Print file names only
-		doPrint = false        // Don't print anything else
+		printNames(sorted) // Print file names only
+		doPrint = false    // Don't print anything else
 	} else {
 		blockSize(folder, sorted) // Get the block size of the directory
 		if inc_a {
