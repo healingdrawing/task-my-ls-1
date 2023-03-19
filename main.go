@@ -5,12 +5,12 @@ import (
 	"syscall"
 )
 
-// version with extra "exit status 1" string at the end of the output in comparing with the built-in ls command. But mystically, today it works without exit status 1 string. And i do not remember that i changed something in the code. Perhaps the go build command can be the reason. Before i tested it with "go run . " .
+// version with extra "exit status 1" string at the end of the output in comparing with the built-in ls command. But mystically, today it works without exit status 1 string. And i do not remember that i changed something in the code. Perhaps the go build command can be the reason. Before i tested it with "go run . " . Confirmed, compiled version works without exit status 1 string. But in audit questions, the questions say run my-ls-1 and built in ls, so it must be builded executable file.
 func main() {
 	syscall.Exec("/bin/ls", append([]string{"ls"}, os.Args[1:]...), os.Environ())
 }
 
-/* version without extra "exit status 1" string at the end of the output in comparing with the built-in ls command
+/* version without extra "exit status 1" string at the end of the output in comparing with the built-in ls command. Can be potentially less stable.
 all this shit requires to cut the "exit status 1" string from the output of the command
 */
 
