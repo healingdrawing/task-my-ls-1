@@ -80,8 +80,6 @@ Sort the files and directories in a specific directory in reverse order:
 
 ## ✍️ Authors <a name = "authors"></a>
 
-- [@kylelobo](https://github.com/kylelobo) - Idea & Initial work
-
 -[@lenivaya10003]https://01.gritlab.ax/git/lenivaya10003
 -[@MariaSagulin]https://01.gritlab.ax/git/MariaSagulin
 -[@Mijan]https://01.gritlab.ax/git/Mijan
