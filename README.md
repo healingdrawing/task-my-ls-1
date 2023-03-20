@@ -59,10 +59,10 @@ Inside terminal: `./my-ls-1 [flags] [path]`
 - List all files and directories in a specific directory, including hidden files and directories:
   `./my-ls-1 -a /path/to/directory`
 
-- Sort the files and directories in a specific directory by modification time:
+- Sort the output in a specific directory by modification time:
   `./my-ls-1 -t /path/to/directory`
 
-- Sort the files and directories in a specific directory in reverse order:
+- Sort the output in a specific directory in reverse order:
   `./my-ls-1 -r /path/to/directory`
 
 [⬆️](#table-of-contents)
